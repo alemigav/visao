@@ -813,6 +813,22 @@ provision/{com.alemigav.nanocore.plist,com.alemigav.brain-backup.plist,rea-mcp.s
 tools/{mkpe.py,mkuart_vcd.py,mkpcap.py,mkpcap_dns.py}
 ```
 
+First commit `8f6ceb0` on branch `main` — 20 files, 1,890 insertions.
+
+**Commit identity is applied per command, not via config.** The repo authors commits as
+`alemigav <alemigav@users.noreply.github.com>` using `GIT_AUTHOR_*` / `GIT_COMMITTER_*`
+env vars. Global `user.name` / `user.email` are deliberately left unset. To make it
+permanent, run once:
+
+```sh
+git config --global user.name  alemigav
+git config --global user.email alemigav@users.noreply.github.com
+```
+
+Otherwise any future commit needs the same two env vars, or git falls back to the
+auto-derived `Alexandre Gavronski <alemigav@Mac-mini-de-Alexandre.local>` — which leaks
+the machine hostname and does not link to GitHub.
+
 ### What is deliberately excluded (`.gitignore`)
 
 | Excluded | Why |
@@ -853,7 +869,11 @@ The backup therefore:
   An unverified backup is not a backup.
 - Passphrase lives in the login Keychain as service `visao-backup` (never in the repo,
   never on the external disk).
-- Rotation keeps the newest 10 (~80 MB total).
+- Rotation keeps the newest 10 (~86 MB total).
+- Once the repo has commits, the `repo/` half is produced by `git archive` **plus a
+  `visao-history.bundle`** — a single-file, `git clone`-able copy of the full history.
+  Verified: `git bundle verify` reports "records a complete history" and cloning it
+  reproduces the commit.
 - Scheduled daily at 21:17 by LaunchAgent `com.alemigav.brain-backup`
   (logs to `~/Library/Logs/brain-backup.log`); also safe to run by hand any time.
 
