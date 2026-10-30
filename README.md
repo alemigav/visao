@@ -484,6 +484,10 @@ To start over anyway: `mimo session delete ses_ffe5e723f1db8ffeKLXcfJU7Fw`.
 - REA docs: `/Users/alemigav/Visao/rea/docs/` — `installation.md` (Hopper/Ghidra
   startup sections), `ghidra-provider.md`, `kuna-provider.md`, `cli.md`
 - Agent memory: `~/.local/share/mimocode/memory/projects/global/MEMORY.md`
+- **House-hacking playbook**: `/Users/alemigav/Visao/PLAYBOOK.md` — inventory via mDNS,
+  traffic attribution, firmware acquisition and extraction, UART/SPI/JTAG with the exact
+  commands, radios, app/daemon analysis, shopping list, and a first-night checklist that
+  needs no hardware.
 - **Operating protocol**: `/Users/alemigav/Visao/PROTOCOL.md` — how the brain keeps a
   long-lived context: the three tiers, the drop gate (verified + documented + not
   load-bearing), thresholds (consolidate at 50 %, hand off at 65 %, rebuild at 85 %),
