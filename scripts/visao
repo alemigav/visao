@@ -1,13 +1,16 @@
 #!/bin/bash
+: "${VISAO_HOME:=$HOME/Visao}"
+: "${VISAO_BIN:=$HOME/.local/bin}"
+: "${MIMO_BIN:=$HOME/.mimocode/bin/mimo}"
 # Visão command center.
 # Non-interactive callers (scripts, launchd, proj) go straight into the session.
 # Interactive use renders a dashboard: press a number, Enter opens the brain.
-SESSION=ses_ffe5e723f1db8ffeKLXcfJU7Fw
-DB=/Users/alemigav/.local/share/mimocode/mimocode.db
-BACKUPS=/Users/alemigav/Visao/.brain
-MIMO=/Users/alemigav/.mimocode/bin/mimo
-REA=/Users/alemigav/.local/bin/rea
-DOCS=/Users/alemigav/Visao
+SESSION="${VISAO_SESSION:-ses_ffe5e723f1db8ffeKLXcfJU7Fw}"
+DB=${HOME}/.local/share/mimocode/mimocode.db
+BACKUPS=${VISAO_HOME}/.brain
+MIMO=${MIMO_BIN}
+REA=${VISAO_BIN}/rea
+DOCS=${VISAO_HOME}
 PORT=7391
 
 cd "$DOCS" || exit 1
@@ -47,16 +50,25 @@ snapshot() {
 # mimo runs a main TUI plus a worker; on restart the new main waits only 5 s for
 # the old worker to release and aborts. Absorb that race.
 open_session() {
-  local attempt=1 start status elapsed
+  local attempt=1 start status elapsed used_fallback=0
+  local args=(--session "$SESSION")
   while :; do
     start=$(date +%s)
-    "$MIMO" --session "$SESSION"
+    "$MIMO" "${args[@]}"
     status=$?
     elapsed=$(( $(date +%s) - start ))
-    if [ "$status" -ne 0 ] && [ "$status" -lt 128 ] && [ "$elapsed" -lt 20 ] && [ "$attempt" -lt 4 ]; then
-      printf 'visao: mimo exited %d after %ss — old worker releasing, retry %d/3...\n' \
+    [ "$status" -eq 0 ] && return 0
+    if [ "$status" -lt 128 ] && [ "$elapsed" -lt 20 ] && [ "$attempt" -lt 3 ]; then
+      printf 'visao: mimo exited %d after %ss — old worker releasing, retry %d/2...\n' \
         "$status" "$elapsed" "$attempt" >&2
       sleep 3; attempt=$((attempt + 1)); continue
+    fi
+    # The pinned session only exists on the machine that created it. On a fresh
+    # install (or restored DB without it) fall back once to "most recent".
+    if [ "$used_fallback" -eq 0 ] && [ "$status" -lt 128 ] && [ "$elapsed" -lt 20 ]; then
+      printf 'visao: pinned session unavailable here — falling back to --continue\n' >&2
+      printf '       (set VISAO_SESSION=<id> or restore the encrypted backup to pin a session)\n' >&2
+      used_fallback=1; attempt=1; args=(--continue); continue
     fi
     return "$status"
   done

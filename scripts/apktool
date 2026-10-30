@@ -1,3 +1,6 @@
 #!/bin/sh
-exec /Users/alemigav/Visao/.toolchain/jdk-25.0.5/Contents/Home/bin/java \
-  -jar /Users/alemigav/Visao/.toolchain/apktool/apktool_3.0.3.jar "$@"
+: "${VISAO_HOME:=$HOME/Visao}"
+: "${VISAO_BIN:=$HOME/.local/bin}"
+: "${MIMO_BIN:=$HOME/.mimocode/bin/mimo}"
+exec ${VISAO_HOME}/.toolchain/jdk-25.0.5/Contents/Home/bin/java \
+  -jar ${VISAO_HOME}/.toolchain/apktool/apktool_3.0.3.jar "$@"

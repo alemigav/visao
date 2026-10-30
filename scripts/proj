@@ -1,4 +1,7 @@
 #!/bin/sh
+: "${VISAO_HOME:=$HOME/Visao}"
+: "${VISAO_BIN:=$HOME/.local/bin}"
+: "${MIMO_BIN:=$HOME/.mimocode/bin/mimo}"
 if [ -z "$1" ]; then
   printf 'usage: proj <path> [mimo args...]\n' >&2
   exit 2
@@ -9,4 +12,4 @@ cd "$target" || exit 1
 if [ $# -eq 0 ]; then
   set -- --continue
 fi
-exec /Users/alemigav/.mimocode/bin/mimo "$@"
+exec ${HOME}/.mimocode/bin/mimo "$@"

@@ -1,11 +1,14 @@
 #!/bin/sh
+: "${VISAO_HOME:=$HOME/Visao}"
+: "${VISAO_BIN:=$HOME/.local/bin}"
+: "${MIMO_BIN:=$HOME/.mimocode/bin/mimo}"
 # Health check for the brain entry point. Read-only.
-SESSION=ses_ffe5e723f1db8ffeKLXcfJU7Fw
-DB=/Users/alemigav/.local/share/mimocode/mimocode.db
-BACKUPS=/Users/alemigav/Visao/.brain
-MIMO=/Users/alemigav/.mimocode/bin/mimo
-LIMA_HOME=/Users/alemigav/Visao/.toolchain/lima-home
-LIMACTL=/Users/alemigav/Visao/.toolchain/lima/bin/limactl
+SESSION="${VISAO_SESSION:-ses_ffe5e723f1db8ffeKLXcfJU7Fw}"
+DB=${HOME}/.local/share/mimocode/mimocode.db
+BACKUPS=${VISAO_HOME}/.brain
+MIMO=${MIMO_BIN}
+LIMA_HOME=${VISAO_HOME}/.toolchain/lima-home
+LIMACTL=${VISAO_HOME}/.toolchain/lima/bin/limactl
 
 echo "entry points"
 for t in visao proj rea adb apktool nanocore limactl visao-doctor; do

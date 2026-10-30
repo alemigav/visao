@@ -7,7 +7,27 @@ Apple Silicon (arm64).
 Total reproducible footprint: **~7.2 GB** (Ghidra 885 MB, JDK 294 MB, Node 199 MB,
 Lima VM 3.0 GB, REA checkout+build ~172 MB, VM disk images and caches the rest).
 
-Root used throughout: `VIS=/Users/alemigav/Visao`.
+## Fast path
+
+```sh
+git clone https://github.com/alemigav/visao.git ~/Visao   # private repo
+cd ~/Visao && ./provision/bootstrap.sh --check            # audit only, changes nothing
+./provision/bootstrap.sh                                  # install/skip, then verify
+```
+
+`bootstrap.sh` is idempotent — each step detects an existing artefact and skips it —
+and refuses to run on Intel Macs, since all artefacts are arm64. It renders the
+MiMoCode config and the launchd/systemd units from the `.template` files with your
+actual `$HOME`, and computes the Lima guest user/home rather than assuming them.
+It never overwrites an existing `~/.config/mimocode/mimocode.jsonc`: a differing
+render lands as `mimocode.jsonc.new` for you to diff.
+
+The manual steps below remain the reference for anything the script cannot decide,
+and for understanding *why* each piece exists.
+
+---
+
+Root used throughout: `VIS=/Users/alemigav/Visao` (on another machine, your own clone path).
 
 ---
 

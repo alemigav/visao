@@ -1,12 +1,15 @@
 #!/bin/sh
+: "${VISAO_HOME:=$HOME/Visao}"
+: "${VISAO_BIN:=$HOME/.local/bin}"
+: "${MIMO_BIN:=$HOME/.mimocode/bin/mimo}"
 # Open-source analysis stack: Ghidra 12.2 + Temurin JDK 25 (no Hopper).
-export JAVA_HOME=/Users/alemigav/Visao/.toolchain/jdk-25.0.5/Contents/Home
-export GHIDRA_INSTALL_DIR=/Users/alemigav/Visao/.toolchain/ghidra_12.2_PUBLIC
+export JAVA_HOME=${VISAO_HOME}/.toolchain/jdk-25.0.5/Contents/Home
+export GHIDRA_INSTALL_DIR=${VISAO_HOME}/.toolchain/ghidra_12.2_PUBLIC
 export REA_ANALYSIS_PROVIDER=ghidra
 # Native mobile + wasm tooling (macOS-supported, no Linux needed)
-export REA_ADB_PATH=/Users/alemigav/Visao/.toolchain/platform-tools/adb
-export REA_APKTOOL_COMMAND=/Users/alemigav/.local/bin/apktool
-export REA_JADX_MCP_JAR=/Users/alemigav/Visao/.toolchain/jadx/jadx-headless-mcp-0.7.1-all.jar
-export REA_WABT_BIN_DIRECTORY=/Users/alemigav/Visao/.toolchain/wabt-1.0.42/wabt-1.0.42/bin
-exec /Users/alemigav/Visao/.toolchain/node-v24.22.2-darwin-arm64/bin/node \
-  /Users/alemigav/Visao/rea/scripts/rea.mjs "$@"
+export REA_ADB_PATH=${VISAO_HOME}/.toolchain/platform-tools/adb
+export REA_APKTOOL_COMMAND=${VISAO_BIN}/apktool
+export REA_JADX_MCP_JAR=${VISAO_HOME}/.toolchain/jadx/jadx-headless-mcp-0.7.1-all.jar
+export REA_WABT_BIN_DIRECTORY=${VISAO_HOME}/.toolchain/wabt-1.0.42/wabt-1.0.42/bin
+exec ${VISAO_HOME}/.toolchain/node-v24.22.2-darwin-arm64/bin/node \
+  ${VISAO_HOME}/rea/scripts/rea.mjs "$@"

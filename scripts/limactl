@@ -1,4 +1,7 @@
 #!/bin/sh
+: "${VISAO_HOME:=$HOME/Visao}"
+: "${VISAO_BIN:=$HOME/.local/bin}"
+: "${MIMO_BIN:=$HOME/.mimocode/bin/mimo}"
 # Lima with its instances kept inside this toolchain (not ~/.lima).
-export LIMA_HOME=/Users/alemigav/Visao/.toolchain/lima-home
-exec /Users/alemigav/Visao/.toolchain/lima/bin/limactl "$@"
+export LIMA_HOME=${VISAO_HOME}/.toolchain/lima-home
+exec ${VISAO_HOME}/.toolchain/lima/bin/limactl "$@"

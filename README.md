@@ -894,3 +894,49 @@ with `PROVISION.md` (182 lines) and `PROTOCOL.md` (132 lines) intact.
 
 **If a disk is ever formatted APFS**, Time Machine becomes the better option and covers
 the toolchain too — `sudo tmutil setdestination -a /Volumes/<name>`.
+
+---
+
+## 17. Portability — rebuilding on another Mac
+
+The repo alone gives you the **capability stack**, not the brain. Two distinct things:
+
+| | Travels via GitHub | Rebuilt / restored |
+|---|---|---|
+| Docs, scripts, config, provision manifest (83 KB) | ✅ git clone | — |
+| Toolchain (6.2 GB) | ❌ | `bootstrap.sh` |
+| Session DB + memory (the brain) | ❌ **never committed** | encrypted backup (`brain-backup`) |
+
+```sh
+git clone https://github.com/alemigav/visao.git ~/Visao
+cd ~/Visao && ./provision/bootstrap.sh --check   # audit: what exists, what is missing
+./provision/bootstrap.sh                         # install/skip everything, then verify
+```
+
+**Apple Silicon only.** The artefacts are arm64 throughout — Node `darwin-arm64`, the
+hand-compiled Ghidra decompiler, the Lima guest. `bootstrap.sh` refuses to run on Intel
+rather than half-working.
+
+### What was fixed to make this true
+
+- **All 8 scripts were parameterised.** They previously carried 83 literal
+  `/Users/alemigav/...` paths, so a different username broke everything. They now derive
+  from `$HOME` and `${VISAO_HOME:-$HOME/Visao}`, overridable per shell.
+- **Config and units are rendered from templates**, not copied with someone else's paths
+  baked in. `bootstrap.sh` computes the Lima guest user and home at install time
+  (`id -un`, `$HOME`) instead of assuming `alemigav` / `/home/alemigav.guest`.
+- **The pinned session degrades gracefully.** `visao` tries the pinned id, then
+  `--continue`, and explains how to set `VISAO_SESSION` — because a fresh machine has no
+  such session and previously would just fail.
+
+### What genuinely does not transfer
+
+The **brain** — this conversation, the accumulated rules and traps in `MEMORY.md`, the
+pinned session. Those live in `~/.local/share/mimocode/` and are deliberately excluded
+from git: binary, churning daily, full transcripts. Restore from the encrypted backup
+instead, and the new machine continues the same conversation.
+
+Machine-specific actions a new Mac still needs, because they are inherently local:
+Keychain passphrase (bootstrap creates one), LaunchAgent bootstrap (bootstrap does it),
+the Hopper `chmod a-x` if that vendor app happens to be installed, and the SSH/Keychain
+authorisation prompts on first use.

@@ -1,0 +1,24 @@
+[Unit]
+Description=REA MCP server (Linux-only tool families) over streamable HTTP
+After=network-online.target
+
+[Service]
+User=@GUEST_USER@
+WorkingDirectory=@GUEST_HOME@/rea
+Environment=PATH=@GUEST_HOME@/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+Environment=REA_MCP_TOOL_FAMILIES=firmware,pcap,artifact,native
+Environment=MCP_HOST=127.0.0.1
+Environment=MCP_PORT=7391
+Environment=REA_UNBLOB_COMMAND=@GUEST_HOME@/.local/bin/unblob
+Environment=REA_TSHARK_COMMAND=/usr/bin/tshark
+Environment=REA_TSHARK_PRLIMIT_COMMAND=/usr/bin/prlimit
+Environment=REA_CAPINFOS_COMMAND=/usr/bin/capinfos
+Environment=REA_SIGROK_COMMAND=/usr/bin/sigrok-cli
+Environment=REA_SIGROK_PRLIMIT_COMMAND=/usr/bin/prlimit
+Environment=REA_PWNTOOLS_PYTHON=@GUEST_HOME@/venv-pwntools/bin/python
+ExecStart=/opt/node24/bin/node @GUEST_HOME@/rea/scripts/rea.mjs mcp --http
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

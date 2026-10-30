@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.alemigav.nanocore</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>@VISAO_HOME@/.toolchain/lima/bin/limactl</string>
+		<string>start</string>
+		<string>core</string>
+		<string>--tty=false</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>LIMA_HOME</key>
+		<string>@VISAO_HOME@/.toolchain/lima-home</string>
+	</dict>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>ProcessType</key>
+	<string>Background</string>
+	<key>StandardOutPath</key>
+	<string>@HOME@/Library/Logs/nanocore.log</string>
+	<key>StandardErrorPath</key>
+	<string>@HOME@/Library/Logs/nanocore.log</string>
+</dict>
+</plist>

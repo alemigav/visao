@@ -1,7 +1,10 @@
 #!/bin/sh
+: "${VISAO_HOME:=$HOME/Visao}"
+: "${VISAO_BIN:=$HOME/.local/bin}"
+: "${MIMO_BIN:=$HOME/.mimocode/bin/mimo}"
 # Enter (or run a command in) the Linux nanocore.
-export LIMA_HOME=/Users/alemigav/Visao/.toolchain/lima-home
-L=/Users/alemigav/Visao/.toolchain/lima/bin/limactl
+export LIMA_HOME=${VISAO_HOME}/.toolchain/lima-home
+L=${VISAO_HOME}/.toolchain/lima/bin/limactl
 if [ "$#" -eq 0 ]; then
   exec "$L" shell core
 fi

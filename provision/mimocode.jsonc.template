@@ -1,0 +1,34 @@
+{
+  "$schema": "https://mimo.xiaomi.com/mimocode/config.json",
+  "mcp": {
+    "rea": {
+      "type": "local",
+      "command": [
+        "@VISAO_HOME@/.toolchain/node-v24.22.2-darwin-arm64/bin/node",
+        "@VISAO_HOME@/rea/scripts/rea.mjs",
+        "mcp"
+      ],
+      "environment": {
+        "GHIDRA_INSTALL_DIR": "@VISAO_HOME@/.toolchain/ghidra_12.2_PUBLIC",
+        "JAVA_HOME": "@VISAO_HOME@/.toolchain/jdk-25.0.5/Contents/Home",
+        "REA_ANALYSIS_PROVIDER": "ghidra",
+        "REA_ADB_PATH": "@VISAO_HOME@/.toolchain/platform-tools/adb",
+        "REA_APKTOOL_COMMAND": "@HOME@/.local/bin/apktool",
+        "REA_JADX_MCP_JAR": "@VISAO_HOME@/.toolchain/jadx/jadx-headless-mcp-0.7.1-all.jar",
+        "REA_WABT_BIN_DIRECTORY": "@VISAO_HOME@/.toolchain/wabt-1.0.42/wabt-1.0.42/bin"
+      },
+      "timeout": 600000
+    },
+    "rea-linux": {
+      "type": "remote",
+      "url": "http://127.0.0.1:7391/mcp",
+      "timeout": 600000
+    }
+  },
+  "permission": {
+    "external_directory": {
+      "*": "ask",
+      "@HOME@/projects/**": "allow"
+    }
+  }
+}

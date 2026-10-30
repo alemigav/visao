@@ -1,4 +1,7 @@
 #!/bin/bash
+: "${VISAO_HOME:=$HOME/Visao}"
+: "${VISAO_BIN:=$HOME/.local/bin}"
+: "${MIMO_BIN:=$HOME/.mimocode/bin/mimo}"
 # Encrypted backup of the brain: state (session DB + memory) AND the recipe (git repo).
 #
 # Deliberately NOT git for the DB: binary, churns daily, contains full transcripts.
@@ -10,9 +13,9 @@
 # backed up — by design.
 set -euo pipefail
 
-VIS=/Users/alemigav/Visao
-DB=/Users/alemigav/.local/share/mimocode/mimocode.db
-MEM=/Users/alemigav/.local/share/mimocode/memory
+VIS=${VISAO_HOME}
+DB=${HOME}/.local/share/mimocode/mimocode.db
+MEM=${HOME}/.local/share/mimocode/memory
 KEEP=10
 KEYCHAIN_SERVICE=visao-backup
 KEYCHAIN_ACCOUNT="$USER"
