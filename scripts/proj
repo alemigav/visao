@@ -1,0 +1,12 @@
+#!/bin/sh
+if [ -z "$1" ]; then
+  printf 'usage: proj <path> [mimo args...]\n' >&2
+  exit 2
+fi
+target="$1"
+shift
+cd "$target" || exit 1
+if [ $# -eq 0 ]; then
+  set -- --continue
+fi
+exec /Users/alemigav/.mimocode/bin/mimo "$@"

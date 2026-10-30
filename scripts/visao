@@ -1,0 +1,111 @@
+#!/bin/bash
+# Visão command center.
+# Non-interactive callers (scripts, launchd, proj) go straight into the session.
+# Interactive use renders a dashboard: press a number, Enter opens the brain.
+SESSION=ses_ffe5e723f1db8ffeKLXcfJU7Fw
+DB=/Users/alemigav/.local/share/mimocode/mimocode.db
+BACKUPS=/Users/alemigav/Visao/.brain
+MIMO=/Users/alemigav/.mimocode/bin/mimo
+REA=/Users/alemigav/.local/bin/rea
+DOCS=/Users/alemigav/Visao
+PORT=7391
+
+cd "$DOCS" || exit 1
+
+# --- ANSI -------------------------------------------------------------------
+if [ -t 1 ] && [ -n "${TERM:-}" ] && [ "${TERM}" != "dumb" ]; then
+  B=$'\033[1m'; D=$'\033[2m'; R=$'\033[0m'
+  C=$'\033[36m'; G=$'\033[32m'; Y=$'\033[33m'; M=$'\033[35m'
+else
+  B=; D=; R=; C=; G=; Y=; M=
+fi
+
+rule() { printf '%s%s%s\n' "$D" "──────────────────────────────────────────────────────────" "$R"; }
+
+nanocore_state() {
+  if nc -z 127.0.0.1 "$PORT" 2>/dev/null; then printf '%s● up%s' "$G" "$R"
+  else printf '%s○ down%s' "$Y" "$R"; fi
+}
+
+rea_version() {
+  /usr/bin/sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$DOCS/rea/package.json" 2>/dev/null | head -1
+}
+
+# Atomic DB snapshot, at most once a day (~45 ms). Keeps the newest 5.
+snapshot() {
+  mkdir -p "$BACKUPS"
+  local latest stamp
+  latest=$(ls -t "$BACKUPS"/mimocode-*.db 2>/dev/null | head -1)
+  if [ -z "$latest" ] || [ -n "$(find "$latest" -mtime +1 2>/dev/null)" ]; then
+    stamp=$(date +%Y%m%d-%H%M%S)
+    if sqlite3 "$DB" ".backup '$BACKUPS/mimocode-$stamp.db'" 2>/dev/null; then
+      ls -t "$BACKUPS"/mimocode-*.db 2>/dev/null | tail -n +6 | while read -r old; do rm -f "$old"; done
+    fi
+  fi
+}
+
+# mimo runs a main TUI plus a worker; on restart the new main waits only 5 s for
+# the old worker to release and aborts. Absorb that race.
+open_session() {
+  local attempt=1 start status elapsed
+  while :; do
+    start=$(date +%s)
+    "$MIMO" --session "$SESSION"
+    status=$?
+    elapsed=$(( $(date +%s) - start ))
+    if [ "$status" -ne 0 ] && [ "$status" -lt 128 ] && [ "$elapsed" -lt 20 ] && [ "$attempt" -lt 4 ]; then
+      printf 'visao: mimo exited %d after %ss — old worker releasing, retry %d/3...\n' \
+        "$status" "$elapsed" "$attempt" >&2
+      sleep 3; attempt=$((attempt + 1)); continue
+    fi
+    return "$status"
+  done
+}
+
+pause() { printf '\n%s↩  Enter to return to the dashboard%s' "$D" "$R"; read -r _; }
+
+render() {
+  local v
+  v=$(rea_version)
+  printf '\n%sVISÃO%s %s· command center%s\n' "$C$B" "$R" "$D" "$R"
+  rule
+  printf ' %sbrain%s     %s%s%s\n'   "$D" "$R" "$B" "$SESSION" "$R"
+  printf ' %shost%s      rea %s · Ghidra 12.2 · macOS\n' "$D" "$R" "${v:-?}"
+  printf ' %snanocore%s  %s · rea-linux :%s\n' "$D" "$R" "$(nanocore_state)" "$PORT"
+  rule
+  printf '\n'
+  printf ' %s[1]%s %sOpen brain session%s %s(default)%s\n' "$M$B" "$R" "$B" "$R" "$D" "$R"
+  printf ' %s[2]%s Health report      %svm · db · snapshots · MCP%s\n' "$M" "$R" "$D" "$R"
+  printf ' %s[3]%s Engine status      %sGhidra provider check%s\n' "$M" "$R" "$D" "$R"
+  printf ' %s[4]%s Enter nanocore     %sLinux shell in the VM%s\n' "$M" "$R" "$D" "$R"
+  printf ' %s[5]%s Tool inventory     %scapabilities summary%s\n' "$M" "$R" "$D" "$R"
+  printf ' %s[6]%s Setup notes        %sREADME.md%s\n' "$M" "$R" "$D" "$R"
+  printf ' %s[7]%s Closed-work ledger %sPROTOCOL.md%s\n' "$M" "$R" "$D" "$R"
+  printf ' %s[q]%s Quit\n' "$M" "$R"
+  rule
+  printf ' %schoice%s ' "$B" "$R"
+}
+
+# --- non-interactive: straight to the session ---------------------------------
+if [ ! -t 0 ] || [ ! -t 1 ]; then
+  snapshot
+  open_session
+  exit $?
+fi
+
+snapshot
+while :; do
+  render
+  if ! read -r choice; then printf '\n'; exit 0; fi   # EOF (stdin closed): leave, never spin
+  case "${choice:-1}" in
+    1)  open_session ;;
+    2)  "$HOME/.local/bin/visao-doctor"; pause ;;
+    3)  "$REA" doctor --provider ghidra; pause ;;
+    4)  "$HOME/.local/bin/nanocore"; pause ;;
+    5)  "$REA" capabilities 2>/dev/null | head -40; pause ;;
+    6)  ${PAGER:-less} "$DOCS/README.md" ;;
+    7)  ${PAGER:-less} "$DOCS/PROTOCOL.md" ;;
+    q|Q) printf '\n'; exit 0 ;;
+    *)  printf ' %sunknown choice%s\n' "$Y" "$R"; sleep 1 ;;
+  esac
+done

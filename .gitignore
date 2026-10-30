@@ -1,0 +1,25 @@
+# Never commit reproducible bulk, machine state, or secrets.
+#
+# Reproducible: re-provision from PROVISION.md instead (~7.2 GB).
+.toolchain/
+rea/
+
+# Machine state: contains full conversation transcripts, churns daily (~13 MB).
+# Back these up, do not version them.
+.brain/
+*.db
+*.db-wal
+*.db-shm
+
+# Agent runtime scratch / locks.
+.mimocode/
+
+# Secrets — never, anywhere.
+auth.json
+.env
+*.pem
+*.key
+
+# Editor / OS noise.
+.DS_Store
+node_modules/

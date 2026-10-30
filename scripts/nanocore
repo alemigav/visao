@@ -1,0 +1,8 @@
+#!/bin/sh
+# Enter (or run a command in) the Linux nanocore.
+export LIMA_HOME=/Users/alemigav/Visao/.toolchain/lima-home
+L=/Users/alemigav/Visao/.toolchain/lima/bin/limactl
+if [ "$#" -eq 0 ]; then
+  exec "$L" shell core
+fi
+exec "$L" shell core -- "$@"

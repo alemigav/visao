@@ -1,0 +1,58 @@
+#!/bin/sh
+# Health check for the brain entry point. Read-only.
+SESSION=ses_ffe5e723f1db8ffeKLXcfJU7Fw
+DB=/Users/alemigav/.local/share/mimocode/mimocode.db
+BACKUPS=/Users/alemigav/Visao/.brain
+MIMO=/Users/alemigav/.mimocode/bin/mimo
+LIMA_HOME=/Users/alemigav/Visao/.toolchain/lima-home
+LIMACTL=/Users/alemigav/Visao/.toolchain/lima/bin/limactl
+
+echo "entry points"
+for t in visao proj rea adb apktool nanocore limactl visao-doctor; do
+  p=$(command -v "$t" 2>/dev/null)
+  if [ -n "$p" ]; then printf '  %-12s %s\n' "$t" "$p"; else printf '  %-12s MISSING\n' "$t"; fi
+done
+
+echo "brain session"
+if "$MIMO" session list 2>/dev/null | grep -q "$SESSION"; then
+  echo "  present  $SESSION"
+  "$MIMO" session list 2>/dev/null | grep "$SESSION" | sed 's/^/  /'
+else
+  echo "  *** MISSING ***  $SESSION"
+fi
+
+echo "database"
+if [ -f "$DB" ]; then
+  printf '  %s (%s)\n' "$DB" "$(ls -lh "$DB" | awk '{print $5}')"
+  if sqlite3 "$DB" "pragma integrity_check;" 2>/dev/null | head -1 | grep -q ok; then
+    echo "  integrity ok"
+  else
+    echo "  *** integrity check did not return ok ***"
+  fi
+else
+  echo "  *** missing ***"
+fi
+
+echo "snapshots"
+if [ -d "$BACKUPS" ]; then
+  count=$(ls -1 "$BACKUPS"/mimocode-*.db 2>/dev/null | wc -l | tr -d ' ')
+  echo "  $count in $BACKUPS"
+  ls -lht "$BACKUPS"/mimocode-*.db 2>/dev/null | head -3 | sed 's/^/  /'
+else
+  echo "  none — run visao once to create the first"
+fi
+
+echo "workers"
+c=$(ps aux | grep -c '[m]imocode/bin/mimo')
+echo "  $c mimo process(es) running"
+
+echo "nanocore"
+state=$(LIMA_HOME="$LIMA_HOME" "$LIMACTL" list 2>/dev/null | awk '$1=="core"{print $2}')
+printf '  lima instance: %s\n' "${state:-absent}"
+# Port probe only. NEVER send an MCP `initialize` here: REA's HTTP transport holds
+# one session, so a probe would evict the agent that is currently attached.
+if nc -z 127.0.0.1 7391 2>/dev/null; then
+  echo "  rea-linux MCP port 7391: listening"
+else
+  echo "  *** port 7391 not listening *** — start it with: limactl start core"
+fi

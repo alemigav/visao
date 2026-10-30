@@ -1,0 +1,78 @@
+#!/bin/bash
+# Encrypted backup of the brain: state (session DB + memory) AND the recipe (git repo).
+#
+# Deliberately NOT git for the DB: binary, churns daily, contains full transcripts.
+# Deliberately NOT Time Machine: the internal disk holds ~179 GB and the dedicated
+# volumes are far smaller (VISAO 29 GB), so a full-machine backup cannot fit.
+# One archive therefore holds exactly what cannot be regenerated:
+#   mimocode.db  ·  memory/  ·  the Visao repo (docs, scripts, provision manifest)
+# Everything in .toolchain/ (6.2 GB) is reproducible from PROVISION.md and is NOT
+# backed up — by design.
+set -euo pipefail
+
+VIS=/Users/alemigav/Visao
+DB=/Users/alemigav/.local/share/mimocode/mimocode.db
+MEM=/Users/alemigav/.local/share/mimocode/memory
+KEEP=10
+KEYCHAIN_SERVICE=visao-backup
+KEYCHAIN_ACCOUNT="$USER"
+
+# Prefer the dedicated VISAO volume; fall back to the external SSD if unplugged.
+if [ $# -gt 0 ]; then
+  DEST="$1"
+elif [ -d /Volumes/VISAO ]; then
+  DEST="/Volumes/VISAO/visao-backups"
+elif [ -d "/Volumes/SSD EXTERNO" ]; then
+  DEST="/Volumes/SSD EXTERNO/visao-backups"
+else
+  echo "no backup volume mounted (VISAO or 'SSD EXTERNO')" >&2
+  exit 1
+fi
+
+mkdir -p "$DEST"
+
+PASS=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -a "$KEYCHAIN_ACCOUNT" -w 2>/dev/null) || {
+  echo "no keychain item '$KEYCHAIN_SERVICE'. create one with:" >&2
+  echo "  security add-generic-password -s $KEYCHAIN_SERVICE -a $KEYCHAIN_ACCOUNT -w \"\$(openssl rand -base64 32)\"" >&2
+  exit 1
+}
+
+STAMP=$(date +%Y%m%d-%H%M%S)
+TMP=$(mktemp -d)
+trap 'rm -rf "$TMP"' EXIT
+
+# 1. State ---------------------------------------------------------------
+sqlite3 "$DB" ".backup '$TMP/mimocode.db'"          # consistent even while mimo writes
+mkdir -p "$TMP/memory"
+rsync -a --exclude '*.lock' "$MEM/" "$TMP/memory/"
+
+# 2. Recipe --------------------------------------------------------------
+mkdir -p "$TMP/repo"
+if git -C "$VIS" rev-parse HEAD >/dev/null 2>&1; then
+  git -C "$VIS" archive --format=tar HEAD | tar xf - -C "$TMP/repo"
+  git -C "$VIS" bundle create "$TMP/repo/visao-history.bundle" --all >/dev/null 2>&1 || true
+else
+  # No commits yet (git identity not configured): capture the working tree instead.
+  rsync -a --exclude '.toolchain' --exclude 'rea' --exclude '.brain' \
+           --exclude '.mimocode' --exclude '.git' "$VIS/" "$TMP/repo/"
+fi
+
+# 3. Encrypt ------------------------------------------------------------
+ARCHIVE="$DEST/brain-$STAMP.tar.gz.enc"
+tar czf - -C "$TMP" mimocode.db memory repo \
+  | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass "pass:$PASS" -out "$ARCHIVE"
+
+# 4. Verify by decrypting before trusting it ----------------------------
+openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass "pass:$PASS" -in "$ARCHIVE" \
+  | tar tzf - > "$TMP/listing.txt"
+COUNT=$(wc -l < "$TMP/listing.txt" | tr -d ' ')
+[ "$COUNT" -gt 0 ] || { echo "verify failed: archive empty" >&2; rm -f "$ARCHIVE"; exit 1; }
+grep -q '^mimocode.db$' "$TMP/listing.txt" || { echo "verify failed: no DB in archive" >&2; rm -f "$ARCHIVE"; exit 1; }
+grep -q '^repo/' "$TMP/listing.txt"      || { echo "verify failed: no repo in archive" >&2; rm -f "$ARCHIVE"; exit 1; }
+
+# 5. Rotate ------------------------------------------------------------
+ls -1t "$DEST"/brain-*.tar.gz.enc 2>/dev/null | tail -n +$((KEEP + 1)) | while read -r old; do rm -f "$old"; done
+
+printf 'backup ok: %s (%s entries, %s)\n' "$ARCHIVE" "$COUNT" "$(du -h "$ARCHIVE" | cut -f1)"
+printf 'contents: state (db+memory) + recipe (repo)\n'
+printf 'restore:  openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in <archive> | tar xzf - -C <dir>\n'

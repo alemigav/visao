@@ -1,0 +1,4 @@
+#!/bin/sh
+# Lima with its instances kept inside this toolchain (not ~/.lima).
+export LIMA_HOME=/Users/alemigav/Visao/.toolchain/lima-home
+exec /Users/alemigav/Visao/.toolchain/lima/bin/limactl "$@"
