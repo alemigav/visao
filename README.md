@@ -813,21 +813,22 @@ provision/{com.alemigav.nanocore.plist,com.alemigav.brain-backup.plist,rea-mcp.s
 tools/{mkpe.py,mkuart_vcd.py,mkpcap.py,mkpcap_dns.py}
 ```
 
-First commit `8f6ceb0` on branch `main` — 20 files, 1,890 insertions.
+Two commits on `main`, pushed to **`https://github.com/alemigav/visao`** — **private**,
+20 files / 83 KB, `main` tracking `origin/main`.
 
-**Commit identity is applied per command, not via config.** The repo authors commits as
-`alemigav <alemigav@users.noreply.github.com>` using `GIT_AUTHOR_*` / `GIT_COMMITTER_*`
-env vars. Global `user.name` / `user.email` are deliberately left unset. To make it
-permanent, run once:
+**Commit identity**: `alemigav <alemigav@users.noreply.github.com>`, configured globally
+by the user (`~/.gitconfig` holds exactly those two keys, 67 bytes). The email is
+GitHub's noreply form, so commits link to the account without exposing a real address.
+Earlier commits in this repo were authored per-command with `GIT_AUTHOR_*` env vars —
+either method yields the same author.
 
-```sh
-git config --global user.name  alemigav
-git config --global user.email alemigav@users.noreply.github.com
-```
+Never let a commit fall back to the auto-derived
+`Alexandre Gavronski <alemigav@Mac-mini-de-Alexandre.local>`: it bakes the machine
+hostname into history and won't associate with GitHub. If the global config is ever lost,
+git will silently do exactly that.
 
-Otherwise any future commit needs the same two env vars, or git falls back to the
-auto-derived `Alexandre Gavronski <alemigav@Mac-mini-de-Alexandre.local>` — which leaks
-the machine hostname and does not link to GitHub.
+Verified before pushing: the remote tree contains no `auth.json`, no `.env`, no `*.db`,
+no `.toolchain/`, no `.brain/`, no `rea/` — 20 files, all text.
 
 ### What is deliberately excluded (`.gitignore`)
 
